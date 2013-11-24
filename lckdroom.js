@@ -83,11 +83,13 @@ function requestInput(){
   if ($('.inputWrap').length){
     $(document).on('keydown', function(e) { 
       if(e.keyCode == 38){
+        // Arrow Up
         if (currPos >= 0){
           $('.inputWrap.active input').val($inputArr[currPos]);
           currPos --;
         }
       }else if(e.keyCode == 40){
+        // Arrow Down
         if ($inputArr.length > (currPos + 1)){
           $('.inputWrap.active input').val($inputArr[currPos + 1]);
           currPos ++;
@@ -95,24 +97,24 @@ function requestInput(){
           $('.inputWrap.active input').val('');
         }
       }else if (e.keyCode == 13){
+        // Return
         if ($inputArr.length < 5){
           $inputArr.push($('.inputWrap.active input').val().toUpperCase());
-      }else if (e.keyCode == 192){
-        return false;
-      }else{
+        }else{
           $inputArr.splice(0,1);
           $inputArr.push($('.inputWrap.active input').val().toUpperCase());
         }
         currPos = $inputArr.length - 1;
-
         last = ($inputArr.length - 1);
         words = $inputArr[last].split(" ");
-        console.log($inputArr);
-        analyzeInput(words[0]);
+        
         if (locked_room.debug){
+          console.log($inputArr);
           print('<div>'+$inputArr[last]+'</div>'); 
-
         }
+
+        analyzeInput(words[0]);
+
         createInputArea();
       }
      });
@@ -327,11 +329,22 @@ function introduction(){
 
 game = function(){
   this.engine = {
-    addCommand : function(name, data){
-      commands[name] = data;
+    addCommand : function(title, data){
+      commands[title] = data;
     },
-    addKeyword : function(name, command){
-      keywords[name] = command;
+    addKeyword : function(keywords, title, type){
+      $.each(keywords, function(i, v)){
+        if (type == 'item'){
+          this.keywords[v].push = this.items[title];
+        }else if(type =='object'){
+          this.keywords[v].push = this.objects[title];
+        }else if (type == 'command'){
+          this.keywords[v].push = this.engine.commands[title];
+        }
+      });
+    },
+    checkKeywords : function(words){
+
     },
     commands : {
       move : function (){
@@ -358,20 +371,20 @@ game = function(){
       this.inventory.push(item);
     }
   }
-  this.addItem = function(name, data){
-    this.items[name] = data;
+  this.addItem = function(title, data){
+    this.items[title] = data;
   }
 
-  this.addLocation = function(name, data){
-    this.locations[name] = data;
+  this.addLocation = function(title, data){
+    this.locations[title] = data;
   }
   
-  this.addObject = function(name, data){
-    this.objects[name] = data;
+  this.addObject = function(title, data){
+    this.objects[title] = data;
   }
 
-  this.addAction = function(name, data){
-    this.actions[name] = data; 
+  this.addAction = function(title, data){
+    this.actions[title] = data; 
   }
 
   this.setDebugMode = function(mode){
@@ -389,20 +402,22 @@ locked_room = new game();
 player = locked_room.player;
 items = locked_room.items;
 locations = locked_room.locations;
+
 locked_room.addItem('paper',{
   title: 'Paper',
-  keywords : ['paper'],
   description : "A piece of paper.  There's nothing written on it."
 });
+locked_room.addKeyword('paper', 'paper', 'item');
+
 locked_room.addItem('key_lion',{
  title : 'Key',
- keywords : ['key'],
  atitle : 'Ornate Key (Lion)',
  description: "It's a key with a lion's head on it."
 });
+locked_room.addKeywords({'key'}, 'key_lion', 'item');
+
 locked_room.addItem('key_tiger',{
  title : 'Key',
- keywords : ['key'],
  atitle : 'Ornate Key (Tiger)',
  description: "It's a key with a tiger's skull on it."
 });     
